@@ -10,7 +10,7 @@ Two solvers over the same inputs (stations sorted by mile marker):
 so the plan doesn't pull off the interstate to buy 1 gallon and save 3
 cents. Fuel is tracked in steps of `FUEL_STEP_MILES` of range (0.1 gallon at
 10 mpg). Buying at a station is a "prefix minimum" over arrival fuel levels,
-so each station costs O(tank levels) numpy work: about 1 ms per 100 stations.
+so each station costs O(tank levels) numpy work: about 2 ms per 100 stations.
 
 `plan_fuel_stops_greedy` is the classic exact greedy for the pure-cost
 problem (no stop penalty): at each station, if a cheaper station is within a
