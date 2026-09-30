@@ -120,9 +120,11 @@ def _nominatim(query):
     if not cfg["NOMINATIM_ENABLED"]:
         return None
     try:
+        # Search worldwide, not just the US: restricting to the US silently turns
+        # "Toronto, ON" into a street in Indianapolis instead of rejecting it.
         resp = requests.get(
             cfg["NOMINATIM_URL"],
-            params={"q": query, "format": "json", "limit": 1, "countrycodes": "us"},
+            params={"q": query, "format": "json", "limit": 1, "addressdetails": 1},
             headers={"User-Agent": cfg["HTTP_USER_AGENT"]},
             timeout=10,
         )
@@ -133,7 +135,14 @@ def _nominatim(query):
     if not results:
         return None
     r = results[0]
-    return Location(float(r["lat"]), float(r["lon"]), r.get("display_name", query), "nominatim")
+    label = r.get("display_name", query)
+    country = (r.get("address") or {}).get("country_code")
+    if country and country != "us":
+        raise GeocodingError(
+            f"'{query}' matched {label}, which is outside the USA. "
+            "For a US city, use 'City, ST'."
+        )
+    return Location(float(r["lat"]), float(r["lon"]), label, "nominatim")
 
 
 def geocode(query):

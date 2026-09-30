@@ -43,3 +43,12 @@ class GeocodeTests(SimpleTestCase):
             loc = geocode("The Strip")
         get.assert_called_once()
         self.assertEqual(loc.source, "nominatim")
+
+    def test_nominatim_match_outside_usa_rejected(self):
+        # Toronto is inside the rough US bounding box, so the country code is what rejects it.
+        fake = mock.Mock(status_code=200)
+        fake.json.return_value = [{"lat": "43.65", "lon": "-79.38", "display_name": "Toronto, Ontario, Canada",
+                                   "address": {"country_code": "ca"}}]
+        with mock.patch.object(geocoding.requests, "get", return_value=fake):
+            with self.assertRaisesMessage(GeocodingError, "outside the USA"):
+                geocode("Toronto, ON")
